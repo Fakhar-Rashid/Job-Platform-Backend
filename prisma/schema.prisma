@@ -18,9 +18,131 @@ model User {
   totalSpent     Int                  @default(0)
   country        String?
   createdAt      DateTime             @default(now())
-  jobs           Job[]
-  bids           Bid[]
-  transactions   ConnectTransaction[]
+
+  title                String?
+  overview             String?
+  hourlyRate           Int?
+  city                 String?
+  avatarUrl            String?
+  videoIntroUrl        String?
+  responseTime         String?
+  skills               String[]
+  hoursPerWeek         HoursPerWeek?
+  openToContractToHire Boolean        @default(false)
+  idVerified           Boolean        @default(false)
+  phoneVerified        Boolean        @default(false)
+  militaryVeteran      Boolean        @default(false)
+  availabilityBadge    Boolean        @default(false)
+  boostProfile         Boolean        @default(false)
+  showWorkHistory      Boolean        @default(true)
+
+  jobs             Job[]
+  bids             Bid[]
+  transactions     ConnectTransaction[]
+  languages        Language[]
+  educations       Education[]
+  employments      Employment[]
+  portfolioItems   PortfolioItem[]
+  certifications   Certification[]
+  licenses         License[]
+  linkedAccounts   LinkedAccount[]
+  otherExperiences OtherExperience[]
+  reviewsReceived  Review[]             @relation("FreelancerReviews")
+  reviewsAuthored  Review[]             @relation("ClientReviews")
+}
+
+model Language {
+  id          String              @id @default(cuid())
+  name        String
+  proficiency LanguageProficiency
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Education {
+  id           String  @id @default(cuid())
+  school       String
+  degree       String?
+  fieldOfStudy String?
+  startYear    Int?
+  endYear      Int?
+  userId       String
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Employment {
+  id          String  @id @default(cuid())
+  company     String
+  title       String
+  startDate   String?
+  endDate     String?
+  current     Boolean @default(false)
+  description String?
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PortfolioItem {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  category    String?
+  imageUrl    String?
+  projectUrl  String?
+  published   Boolean @default(true)
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Certification {
+  id     String  @id @default(cuid())
+  name   String
+  issuer String?
+  year   Int?
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model License {
+  id     String  @id @default(cuid())
+  name   String
+  issuer String?
+  year   Int?
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LinkedAccount {
+  id       String  @id @default(cuid())
+  provider String
+  username String
+  url      String?
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OtherExperience {
+  id          String  @id @default(cuid())
+  subject     String
+  description String?
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  rating       Int
+  comment      String
+  endorsements String[]
+  amount       Int
+  priceType    JobType
+  createdAt    DateTime @default(now())
+  jobId        String   @unique
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User     @relation("ClientReviews", fields: [authorId], references: [id], onDelete: Cascade)
+  freelancerId String
+  freelancer   User     @relation("FreelancerReviews", fields: [freelancerId], references: [id], onDelete: Cascade)
 }
 
 model Job {
@@ -37,6 +159,7 @@ model Job {
   ownerId         String
   owner           User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   bids            Bid[]
+  review          Review?
 }
 
 model Bid {
@@ -88,4 +211,17 @@ enum BidStatus {
 enum TransactionReason {
   TOPUP
   BID
+}
+
+enum HoursPerWeek {
+  AS_NEEDED
+  LESS_THAN_30
+  MORE_THAN_30
+}
+
+enum LanguageProficiency {
+  BASIC
+  CONVERSATIONAL
+  FLUENT
+  NATIVE_OR_BILINGUAL
 }

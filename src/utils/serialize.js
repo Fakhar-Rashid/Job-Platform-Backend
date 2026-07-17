@@ -4,5 +4,10 @@ export function publicUser(user) {
 }
 
 export function currentUser(user) {
-  return { ...publicUser(user), connectBalance: user.connectBalance };
+  return {
+    ...publicUser(user),
+    connectBalance: user.connectBalance,
+    title: user.title,
+    avatarUrl: user.avatarUrl,
+  };
 }
