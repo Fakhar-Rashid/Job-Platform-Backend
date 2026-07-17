@@ -16,3 +16,7 @@ export async function mine(req: Request, res: Response) {
 export async function accept(req: Request, res: Response) {
   res.json(await bidsService.acceptBid(req.params.id, req.user!.id));
 }
+
+export async function boosts(req: Request, res: Response) {
+  res.json(await bidsService.listJobBoosts(req.params.id));
+}

@@ -17,6 +17,8 @@ model User {
   rating         Float?
   totalSpent     Int                  @default(0)
   country        String?
+  activeRole     Role                 @default(FREELANCER)
+  onlineForMessages Boolean           @default(true)
   createdAt      DateTime             @default(now())
 
   title                String?
@@ -49,6 +51,7 @@ model User {
   otherExperiences OtherExperience[]
   reviewsReceived  Review[]             @relation("FreelancerReviews")
   reviewsAuthored  Review[]             @relation("ClientReviews")
+  savedJobs        SavedJob[]
 }
 
 model Language {
@@ -167,10 +170,18 @@ model Job {
   id              String          @id @default(cuid())
   title           String
   description     String
-  budget          Int
+  budget          Int?
   jobType         JobType         @default(FIXED)
   experienceLevel ExperienceLevel @default(ENTRY)
-  durationLabel   String?
+  category        String?
+  projectTerm     ProjectTerm?
+  scopeSize       ScopeSize?
+  duration        JobDuration?
+  contractToHire  Boolean         @default(false)
+  hourlyRateMin   Int?
+  hourlyRateMax   Int?
+  connectsRequired Int            @default(10)
+  lastViewedAt    DateTime?
   skills          String[]
   status          JobStatus       @default(OPEN)
   createdAt       DateTime        @default(now())
@@ -178,9 +189,22 @@ model Job {
   owner           User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   bids            Bid[]
   review          Review?
+  savedBy         SavedJob[]
 
   @@index([status, createdAt])
   @@index([ownerId])
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId])
 }
 
 model Bid {
@@ -188,6 +212,7 @@ model Bid {
   amount       Int
   coverLetter  String
   connectsSpent Int
+  boostConnects Int      @default(0)
   status       BidStatus @default(PENDING)
   createdAt    DateTime  @default(now())
   jobId        String
@@ -248,4 +273,26 @@ enum LanguageProficiency {
   CONVERSATIONAL
   FLUENT
   NATIVE_OR_BILINGUAL
+}
+
+enum Role {
+  FREELANCER
+  CLIENT
+}
+
+enum ScopeSize {
+  LARGE
+  MEDIUM
+  SMALL
+}
+
+enum ProjectTerm {
+  LONG_TERM
+  SHORT_TERM
+}
+
+enum JobDuration {
+  MORE_THAN_6_MONTHS
+  THREE_TO_SIX_MONTHS
+  ONE_TO_THREE_MONTHS
 }

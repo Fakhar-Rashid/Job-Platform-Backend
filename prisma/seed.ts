@@ -3,15 +3,6 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-interface CompletedItem {
-  owner: string;
-  title: string;
-  amount: number;
-  rating: number;
-  comment: string;
-  endorsements: string[];
-}
-
 const CLIENTS = [
   {
     name: 'Alice',
@@ -20,6 +11,7 @@ const CLIENTS = [
     rating: 5,
     totalSpent: 1200,
     country: 'United Kingdom',
+    activeRole: 'CLIENT' as const,
   },
   {
     name: 'Bob',
@@ -28,6 +20,7 @@ const CLIENTS = [
     rating: 4.8,
     totalSpent: 340,
     country: 'Germany',
+    activeRole: 'CLIENT' as const,
   },
 ];
 
@@ -68,10 +61,16 @@ const OPEN_JOBS = [
     title: 'Make an App for my website calculator',
     description:
       'Looking to turn my online glass calculator into a mobile application where customers can sign up and order their glass on the app.',
-    budget: 900,
     jobType: 'HOURLY' as const,
+    hourlyRateMin: 3,
+    hourlyRateMax: 5,
     experienceLevel: 'ENTRY' as const,
-    durationLabel: 'Less than 1 month, Less than 30 hrs/week',
+    category: 'Mobile App Development',
+    projectTerm: 'SHORT_TERM' as const,
+    scopeSize: 'MEDIUM' as const,
+    duration: 'ONE_TO_THREE_MONTHS' as const,
+    contractToHire: true,
+    connectsRequired: 10,
     skills: ['AI Mobile App Development', 'Mobile App Development', 'Android', 'iPhone'],
   },
   {
@@ -82,12 +81,16 @@ const OPEN_JOBS = [
     budget: 600,
     jobType: 'FIXED' as const,
     experienceLevel: 'INTERMEDIATE' as const,
-    durationLabel: '1 to 3 months, Less than 30 hrs/week',
+    category: 'Mobile App Development',
+    projectTerm: 'SHORT_TERM' as const,
+    scopeSize: 'MEDIUM' as const,
+    duration: 'ONE_TO_THREE_MONTHS' as const,
+    connectsRequired: 10,
     skills: ['React Native', 'Mobile App Development', 'UI/UX Design'],
   },
 ];
 
-const COMPLETED: CompletedItem[] = [
+const COMPLETED = [
   {
     owner: 'alice@example.com',
     title: 'Fix Bugs & Add Features to Existing Flutter App',
@@ -167,7 +170,11 @@ async function seedProfileChildren(userId: string): Promise<void> {
   });
 }
 
-async function seedCompletedJob(fakharId: string, ownerId: string, item: CompletedItem): Promise<void> {
+async function seedCompletedJob(
+  fakharId: string,
+  ownerId: string,
+  item: (typeof COMPLETED)[number],
+): Promise<void> {
   const job = await prisma.job.create({
     data: {
       ownerId,

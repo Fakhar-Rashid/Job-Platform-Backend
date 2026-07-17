@@ -24,6 +24,54 @@ describe('createJobSchema', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('rejects a fixed price job without a budget', () => {
+    const result = createJobSchema.safeParse({
+      title: 'Valid title',
+      description: 'long enough text',
+      jobType: 'FIXED',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an hourly job without a rate range', () => {
+    const result = createJobSchema.safeParse({
+      title: 'Valid title',
+      description: 'long enough text',
+      jobType: 'HOURLY',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an hourly range where min exceeds max', () => {
+    const result = createJobSchema.safeParse({
+      title: 'Valid title',
+      description: 'long enough text',
+      jobType: 'HOURLY',
+      hourlyRateMin: 30,
+      hourlyRateMax: 13,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts a full hourly job with wizard fields', () => {
+    const result = createJobSchema.parse({
+      title: 'Expert developer',
+      description: 'long enough description text',
+      jobType: 'HOURLY',
+      hourlyRateMin: '13',
+      hourlyRateMax: '30',
+      category: 'Full Stack Development',
+      projectTerm: 'SHORT_TERM',
+      scopeSize: 'MEDIUM',
+      duration: 'ONE_TO_THREE_MONTHS',
+      experienceLevel: 'ENTRY',
+      contractToHire: false,
+      skills: ['API', 'HTML', 'JavaScript'],
+    });
+    expect(result.hourlyRateMin).toBe(13);
+    expect(result.skills).toHaveLength(3);
+  });
 });
 
 describe('listJobsSchema', () => {

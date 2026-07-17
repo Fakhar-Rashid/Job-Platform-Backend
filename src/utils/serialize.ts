@@ -11,5 +11,8 @@ export function currentUser(user: User) {
     connectBalance: user.connectBalance,
     title: user.title,
     avatarUrl: user.avatarUrl,
+    hourlyRate: user.hourlyRate,
+    activeRole: user.activeRole,
+    onlineForMessages: user.onlineForMessages,
   };
 }

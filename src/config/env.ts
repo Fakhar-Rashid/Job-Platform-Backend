@@ -17,5 +17,4 @@ export const env = {
 export const isProduction = env.nodeEnv === 'production';
 
 export const STARTING_CONNECTS = 50;
-export const BID_CONNECT_COST = 5;
 export const TOPUP_AMOUNT = 20;

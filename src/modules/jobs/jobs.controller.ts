@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import * as jobsService from './jobs.service.js';
+import * as savedService from './saved.service.js';
 
 export async function list(req: Request, res: Response) {
   res.json(await jobsService.listJobs(req.query));
@@ -23,5 +24,19 @@ export async function update(req: Request, res: Response) {
 
 export async function remove(req: Request, res: Response) {
   await jobsService.deleteJob(req.params.id, req.user!.id);
+  res.status(204).end();
+}
+
+export async function listSaved(req: Request, res: Response) {
+  res.json(await savedService.listSaved(req.user!.id));
+}
+
+export async function save(req: Request, res: Response) {
+  await savedService.saveJob(req.user!.id, req.params.id);
+  res.status(204).end();
+}
+
+export async function unsave(req: Request, res: Response) {
+  await savedService.unsaveJob(req.user!.id, req.params.id);
   res.status(204).end();
 }
