@@ -51,13 +51,14 @@ export async function getJob(id: string) {
   });
   if (!job) throw new HttpError(404, 'Job not found');
 
-  const [bidStats, openJobs, totalJobs, hiredJobs] = await Promise.all([
+  const [bidStats, interviewing, openJobs, totalJobs, hiredJobs] = await Promise.all([
     prisma.bid.aggregate({
       where: { jobId: id },
       _max: { amount: true },
       _min: { amount: true },
       _avg: { amount: true },
     }),
+    prisma.bid.count({ where: { jobId: id, interviewing: true } }),
     prisma.job.count({ where: { ownerId: job.ownerId, status: 'OPEN' } }),
     prisma.job.count({ where: { ownerId: job.ownerId } }),
     prisma.job.count({ where: { ownerId: job.ownerId, bids: { some: { status: 'ACCEPTED' } } } }),
@@ -67,6 +68,7 @@ export async function getJob(id: string) {
     ...shape(job),
     activity: {
       proposalCount: job._count.bids,
+      interviewing,
       lastViewedAt: job.lastViewedAt,
       bidRange:
         bidStats._max.amount == null

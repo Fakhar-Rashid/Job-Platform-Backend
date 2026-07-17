@@ -8,7 +8,7 @@ export async function listForJob(req, res) {
 export async function mine(req, res) {
     res.json(await bidsService.listMyBids(req.user.id));
 }
-export async function accept(req, res) {
-    res.json(await bidsService.acceptBid(req.params.id, req.user.id));
+export async function boosts(req, res) {
+    res.json(await bidsService.listJobBoosts(req.params.id));
 }
 //# sourceMappingURL=bids.controller.js.map

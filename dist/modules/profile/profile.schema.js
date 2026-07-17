@@ -18,6 +18,8 @@ export const coreSchema = z.object({
     availabilityBadge: z.boolean().optional(),
     boostProfile: z.boolean().optional(),
     showWorkHistory: z.boolean().optional(),
+    activeRole: z.enum(['FREELANCER', 'CLIENT']).optional(),
+    onlineForMessages: z.boolean().optional(),
 });
 export const skillsSchema = z.object({
     skills: z.array(z.string().trim().min(1)).max(50),

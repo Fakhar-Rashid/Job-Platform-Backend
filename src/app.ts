@@ -12,6 +12,7 @@ import { profileRouter } from './modules/profile/profile.routes.js';
 import { jobReviewRouter } from './modules/reviews/reviews.routes.js';
 import { contractsRouter, milestonesRouter, hoursRouter } from './modules/contracts/contracts.routes.js';
 import { walletRouter } from './modules/wallet/wallet.routes.js';
+import { conversationsRouter } from './modules/messages/messages.routes.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
@@ -38,6 +39,7 @@ export function createApp() {
   app.use('/api/milestones', milestonesRouter);
   app.use('/api/hours', hoursRouter);
   app.use('/api/wallet', walletRouter);
+  app.use('/api/conversations', conversationsRouter);
 
   app.use(notFound);
   app.use(errorHandler);

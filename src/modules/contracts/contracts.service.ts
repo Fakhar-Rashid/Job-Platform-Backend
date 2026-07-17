@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { HttpError } from '../../utils/httpError.js';
+import { upsertConversation } from '../messages/messages.service.js';
 import type { HireInput } from './contracts.schema.js';
 
 const partySelect = { select: { id: true, name: true, avatarUrl: true } };
@@ -36,7 +37,7 @@ export async function hire(clientId: string, { bidId, hourlyRate, milestones, me
     throw new HttpError(400, 'Fixed price offers need at least one milestone');
   }
 
-  return prisma.contract.create({
+  const contract = await prisma.contract.create({
     data: {
       type,
       hourlyRate: type === 'HOURLY' ? (hourlyRate ?? bid.amount) : null,
@@ -52,6 +53,21 @@ export async function hire(clientId: string, { bidId, hourlyRate, milestones, me
     },
     include: listInclude,
   });
+
+  const conversation = await upsertConversation(clientId, bid.freelancerId, bid.jobId);
+  await prisma.conversation.update({ where: { id: conversation.id }, data: { contractId: contract.id } });
+  await prisma.message.create({
+    data: {
+      conversationId: conversation.id,
+      senderId: clientId,
+      type: 'OFFER',
+      contractId: contract.id,
+      body: message ?? `Sent an offer for "${bid.job.title}".`,
+    },
+  });
+  await prisma.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: new Date() } });
+
+  return contract;
 }
 
 export async function accept(contractId: string, freelancerId: string) {

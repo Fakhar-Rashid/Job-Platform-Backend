@@ -105,6 +105,26 @@ async function seedCompletedJob(
       comment: item.clientComment,
     },
   });
+
+  const conversation = await prisma.conversation.create({
+    data: { jobId: job.id, clientId, freelancerId, contractId: contract.id },
+  });
+  await prisma.bid.update({ where: { id: bid.id }, data: { interviewing: true } });
+  await prisma.message.create({
+    data: {
+      conversationId: conversation.id,
+      senderId: clientId,
+      type: 'OFFER',
+      contractId: contract.id,
+      body: item.comment,
+    },
+  });
+  await prisma.message.createMany({
+    data: [
+      { conversationId: conversation.id, senderId: freelancerId, body: 'Thanks for the offer — accepted! Starting now.' },
+      { conversationId: conversation.id, senderId: clientId, body: 'Great, looking forward to it.' },
+    ],
+  });
 }
 
 async function main(): Promise<void> {

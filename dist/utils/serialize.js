@@ -7,8 +7,12 @@ export function currentUser(user) {
     return {
         ...publicUser(user),
         connectBalance: user.connectBalance,
+        walletBalance: user.walletBalance,
         title: user.title,
         avatarUrl: user.avatarUrl,
+        hourlyRate: user.hourlyRate,
+        activeRole: user.activeRole,
+        onlineForMessages: user.onlineForMessages,
     };
 }
 //# sourceMappingURL=serialize.js.map
