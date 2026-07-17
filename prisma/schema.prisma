@@ -57,6 +57,8 @@ model Language {
   proficiency LanguageProficiency
   userId      String
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Education {
@@ -68,6 +70,8 @@ model Education {
   endYear      Int?
   userId       String
   user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Employment {
@@ -80,6 +84,8 @@ model Employment {
   description String?
   userId      String
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model PortfolioItem {
@@ -92,6 +98,8 @@ model PortfolioItem {
   published   Boolean @default(true)
   userId      String
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Certification {
@@ -101,6 +109,8 @@ model Certification {
   year   Int?
   userId String
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model License {
@@ -110,6 +120,8 @@ model License {
   year   Int?
   userId String
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model LinkedAccount {
@@ -119,6 +131,8 @@ model LinkedAccount {
   url      String?
   userId   String
   user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model OtherExperience {
@@ -127,6 +141,8 @@ model OtherExperience {
   description String?
   userId      String
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Review {
@@ -143,6 +159,8 @@ model Review {
   author       User     @relation("ClientReviews", fields: [authorId], references: [id], onDelete: Cascade)
   freelancerId String
   freelancer   User     @relation("FreelancerReviews", fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@index([freelancerId])
 }
 
 model Job {
@@ -160,6 +178,9 @@ model Job {
   owner           User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   bids            Bid[]
   review          Review?
+
+  @@index([status, createdAt])
+  @@index([ownerId])
 }
 
 model Bid {
@@ -175,6 +196,7 @@ model Bid {
   freelancer   User      @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, freelancerId])
+  @@index([freelancerId, status])
 }
 
 model ConnectTransaction {
@@ -184,6 +206,8 @@ model ConnectTransaction {
   createdAt DateTime      @default(now())
   userId    String
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum JobStatus {

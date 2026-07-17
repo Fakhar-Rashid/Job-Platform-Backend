@@ -10,16 +10,22 @@ function shape(job) {
   return { ...rest, bidCount: _count?.bids };
 }
 
-export async function listJobs({ search, status }) {
+export async function listJobs({ search, status, cursor, limit = 20 }) {
+  const take = Math.min(limit, 50);
   const jobs = await prisma.job.findMany({
     where: {
       status,
       title: search ? { contains: search, mode: 'insensitive' } : undefined,
     },
     include: { owner: ownerSelect, _count: { select: { bids: true } } },
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: take + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
-  return jobs.map(shape);
+
+  const hasMore = jobs.length > take;
+  const items = (hasMore ? jobs.slice(0, take) : jobs).map(shape);
+  return { items, nextCursor: hasMore ? items[items.length - 1].id : null };
 }
 
 export async function getJob(id) {

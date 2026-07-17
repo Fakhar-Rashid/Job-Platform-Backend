@@ -5,6 +5,7 @@ import { CHILD_RESOURCES } from './profile.children.js';
 import { buildChildRouter } from './childResource.js';
 import { validate } from '../../middleware/validate.js';
 import { requireAuth } from '../../middleware/auth.js';
+import { publicShort } from '../../middleware/cache.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 
 export const profileRouter = Router();
@@ -16,4 +17,4 @@ for (const { path, model, schema } of CHILD_RESOURCES) {
   profileRouter.use(`/${path}`, buildChildRouter({ model, schema }));
 }
 
-profileRouter.get('/:id', asyncHandler(controller.get));
+profileRouter.get('/:id', publicShort, asyncHandler(controller.get));

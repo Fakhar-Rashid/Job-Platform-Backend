@@ -16,4 +16,6 @@ export const updateJobSchema = z.object({
 export const listJobsSchema = z.object({
   search: z.string().trim().optional(),
   status: z.enum(['OPEN', 'CLOSED']).optional(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().positive().max(50).optional(),
 });

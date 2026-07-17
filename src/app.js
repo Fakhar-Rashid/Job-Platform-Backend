@@ -9,6 +9,7 @@ import { jobBidsRouter, bidsRouter } from './modules/bids/bids.routes.js';
 import { connectsRouter } from './modules/connects/connects.routes.js';
 import { profileRouter } from './modules/profile/profile.routes.js';
 import { jobReviewRouter } from './modules/reviews/reviews.routes.js';
+import { apiLimiter } from './middleware/rateLimit.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 export function createApp() {
@@ -17,6 +18,7 @@ export function createApp() {
   app.use(cors({ origin: env.clientOrigin }));
   app.use(express.json());
   app.use(morgan('dev'));
+  app.use('/api', apiLimiter);
 
   app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
   app.use('/api/auth', authRouter);
