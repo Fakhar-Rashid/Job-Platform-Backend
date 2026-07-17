@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import morgan from 'morgan';
-import { env } from './config/env.js';
+import { env, isProduction } from './config/env.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { usersRouter } from './modules/users/users.routes.js';
 import { jobsRouter } from './modules/jobs/jobs.routes.js';
@@ -15,9 +16,11 @@ import { notFound, errorHandler } from './middleware/error.js';
 export function createApp() {
   const app = express();
 
+  if (isProduction) app.set('trust proxy', 1);
+  app.use(helmet());
   app.use(cors({ origin: env.clientOrigin }));
-  app.use(express.json());
-  app.use(morgan('dev'));
+  app.use(express.json({ limit: '100kb' }));
+  app.use(morgan(isProduction ? 'combined' : 'dev'));
   app.use('/api', apiLimiter);
 
   app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));

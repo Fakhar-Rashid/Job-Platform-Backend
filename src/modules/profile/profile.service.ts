@@ -18,7 +18,7 @@ const childRelations = {
 } as const;
 
 function sanitize<T extends { passwordHash: unknown; email: unknown }>(user: T) {
-  const { passwordHash, email, ...rest } = user;
+  const { passwordHash: _passwordHash, email: _email, ...rest } = user;
   return rest;
 }
 

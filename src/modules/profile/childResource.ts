@@ -18,22 +18,33 @@ export function buildChildRouter({ model, schema }: { model: string; schema: Zod
 
   router.use(requireAuth);
 
-  router.post('/', validate(schema), asyncHandler(async (req, res) => {
-    const created = await delegate.create({ data: { ...req.body, userId: req.user!.id } });
-    res.status(201).json(created);
-  }));
+  router.post(
+    '/',
+    validate(schema),
+    asyncHandler(async (req, res) => {
+      const created = await delegate.create({ data: { ...req.body, userId: req.user!.id } });
+      res.status(201).json(created);
+    }),
+  );
 
-  router.patch('/:id', validate((schema as AnyZodObject).partial()), asyncHandler(async (req, res) => {
-    await requireOwned(req.params.id, req.user!.id);
-    const updated = await delegate.update({ where: { id: req.params.id }, data: req.body });
-    res.json(updated);
-  }));
+  router.patch(
+    '/:id',
+    validate((schema as AnyZodObject).partial()),
+    asyncHandler(async (req, res) => {
+      await requireOwned(req.params.id, req.user!.id);
+      const updated = await delegate.update({ where: { id: req.params.id }, data: req.body });
+      res.json(updated);
+    }),
+  );
 
-  router.delete('/:id', asyncHandler(async (req, res) => {
-    await requireOwned(req.params.id, req.user!.id);
-    await delegate.delete({ where: { id: req.params.id } });
-    res.status(204).end();
-  }));
+  router.delete(
+    '/:id',
+    asyncHandler(async (req, res) => {
+      await requireOwned(req.params.id, req.user!.id);
+      await delegate.delete({ where: { id: req.params.id } });
+      res.status(204).end();
+    }),
+  );
 
   return router;
 }

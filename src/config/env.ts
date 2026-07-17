@@ -11,7 +11,10 @@ export const env = {
   jwtSecret: required('JWT_SECRET'),
   port: Number(process.env.PORT ?? 4000),
   clientOrigin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173',
+  nodeEnv: process.env.NODE_ENV ?? 'development',
 };
+
+export const isProduction = env.nodeEnv === 'production';
 
 export const STARTING_CONNECTS = 50;
 export const BID_CONNECT_COST = 5;
