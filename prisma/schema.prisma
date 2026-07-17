@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String               @id @default(cuid())
+  email          String               @unique
+  passwordHash   String
+  name           String
+  connectBalance Int                  @default(50)
+  paymentVerified Boolean             @default(false)
+  rating         Float?
+  totalSpent     Int                  @default(0)
+  country        String?
+  createdAt      DateTime             @default(now())
+  jobs           Job[]
+  bids           Bid[]
+  transactions   ConnectTransaction[]
+}
+
+model Job {
+  id              String          @id @default(cuid())
+  title           String
+  description     String
+  budget          Int
+  jobType         JobType         @default(FIXED)
+  experienceLevel ExperienceLevel @default(ENTRY)
+  durationLabel   String?
+  skills          String[]
+  status          JobStatus       @default(OPEN)
+  createdAt       DateTime        @default(now())
+  ownerId         String
+  owner           User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bids            Bid[]
+}
+
+model Bid {
+  id           String    @id @default(cuid())
+  amount       Int
+  coverLetter  String
+  connectsSpent Int
+  status       BidStatus @default(PENDING)
+  createdAt    DateTime  @default(now())
+  jobId        String
+  job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancerId String
+  freelancer   User      @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, freelancerId])
+}
+
+model ConnectTransaction {
+  id        String        @id @default(cuid())
+  amount    Int
+  reason    TransactionReason
+  createdAt DateTime      @default(now())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+}
+
+enum JobType {
+  FIXED
+  HOURLY
+}
+
+enum ExperienceLevel {
+  ENTRY
+  INTERMEDIATE
+  EXPERT
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum TransactionReason {
+  TOPUP
+  BID
+}
