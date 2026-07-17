@@ -36,27 +36,40 @@ export async function getFullProfile(id: string) {
   const user = await prisma.user.findUnique({ where: { id }, include: childRelations });
   if (!user) throw new HttpError(404, 'User not found');
 
-  const acceptedBids = await prisma.bid.findMany({
-    where: { freelancerId: id, status: 'ACCEPTED' },
-    include: { job: { select: { id: true, title: true, jobType: true, createdAt: true } } },
-    orderBy: { createdAt: 'desc' },
-  });
+  const [endedContracts, earnings] = await Promise.all([
+    prisma.contract.findMany({
+      where: { freelancerId: id, status: 'ENDED' },
+      include: {
+        job: { select: { id: true, title: true } },
+        milestones: { where: { status: 'APPROVED' }, select: { amount: true } },
+        bid: { select: { amount: true } },
+      },
+      orderBy: { endedAt: 'desc' },
+    }),
+    prisma.walletTransaction.aggregate({
+      where: { userId: id, reason: { in: ['MILESTONE_PAYOUT', 'HOURLY_PAYOUT'] }, amount: { gt: 0 } },
+      _sum: { amount: true },
+    }),
+  ]);
 
   const reviews = user.reviewsReceived;
   const reviewByJob = Object.fromEntries(reviews.map((r) => [r.jobId, r]));
-  const completedJobs = acceptedBids.map((bid) => ({
-    id: bid.job.id,
-    title: bid.job.title,
-    jobType: bid.job.jobType,
-    amount: bid.amount,
-    review: reviewByJob[bid.jobId] ?? null,
+  const completedJobs = endedContracts.map((contract) => ({
+    id: contract.job.id,
+    title: contract.job.title,
+    jobType: contract.type,
+    amount:
+      contract.type === 'FIXED'
+        ? contract.milestones.reduce((sum, m) => sum + m.amount, 0)
+        : contract.bid.amount,
+    review: reviewByJob[contract.jobId] ?? null,
   }));
 
   return {
     ...sanitize(user),
     stats: {
-      totalEarnings: acceptedBids.reduce((sum, bid) => sum + bid.amount, 0),
-      totalJobs: acceptedBids.length,
+      totalEarnings: earnings._sum.amount ?? 0,
+      totalJobs: endedContracts.length,
       reviewCount: reviews.length,
       rating: reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : null,
     },

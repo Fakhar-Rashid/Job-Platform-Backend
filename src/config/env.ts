@@ -18,3 +18,5 @@ export const isProduction = env.nodeEnv === 'production';
 
 export const STARTING_CONNECTS = 50;
 export const TOPUP_AMOUNT = 20;
+export const WALLET_TOPUP_AMOUNT = 500;
+export const SERVICE_FEE_RATE = 0.1;

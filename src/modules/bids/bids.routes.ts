@@ -12,4 +12,3 @@ jobBidsRouter.get('/boosts', requireAuth, asyncHandler(controller.boosts));
 
 export const bidsRouter = Router();
 bidsRouter.get('/mine', requireAuth, asyncHandler(controller.mine));
-bidsRouter.post('/:id/accept', requireAuth, asyncHandler(controller.accept));

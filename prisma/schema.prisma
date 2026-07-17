@@ -13,6 +13,7 @@ model User {
   passwordHash   String
   name           String
   connectBalance Int                  @default(50)
+  walletBalance  Int                  @default(0)
   paymentVerified Boolean             @default(false)
   rating         Float?
   totalSpent     Int                  @default(0)
@@ -52,6 +53,11 @@ model User {
   reviewsReceived  Review[]             @relation("FreelancerReviews")
   reviewsAuthored  Review[]             @relation("ClientReviews")
   savedJobs        SavedJob[]
+  clientContracts     Contract[]        @relation("ClientContracts")
+  freelancerContracts Contract[]        @relation("FreelancerContracts")
+  clientFeedbackReceived ClientFeedback[] @relation("ClientFeedbackReceived")
+  clientFeedbackGiven    ClientFeedback[] @relation("ClientFeedbackGiven")
+  walletTransactions  WalletTransaction[]
 }
 
 model Language {
@@ -190,6 +196,7 @@ model Job {
   bids            Bid[]
   review          Review?
   savedBy         SavedJob[]
+  contracts       Contract[]
 
   @@index([status, createdAt])
   @@index([ownerId])
@@ -219,9 +226,95 @@ model Bid {
   job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
   freelancerId String
   freelancer   User      @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+  contracts    Contract[]
 
   @@unique([jobId, freelancerId])
   @@index([freelancerId, status])
+}
+
+model Contract {
+  id           String         @id @default(cuid())
+  type         JobType
+  hourlyRate   Int?
+  offerMessage String?
+  status       ContractStatus @default(OFFERED)
+  createdAt    DateTime       @default(now())
+  acceptedAt   DateTime?
+  endedAt      DateTime?
+  endedById    String?
+  jobId        String
+  job          Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  bidId        String
+  bid          Bid            @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  clientId     String
+  client       User           @relation("ClientContracts", fields: [clientId], references: [id], onDelete: Cascade)
+  freelancerId String
+  freelancer   User           @relation("FreelancerContracts", fields: [freelancerId], references: [id], onDelete: Cascade)
+  milestones   Milestone[]
+  timeEntries  TimeEntry[]
+  clientFeedback ClientFeedback?
+
+  @@index([clientId])
+  @@index([freelancerId])
+  @@index([bidId])
+  @@index([jobId])
+}
+
+model Milestone {
+  id                String          @id @default(cuid())
+  description       String
+  amount            Int
+  order             Int
+  status            MilestoneStatus @default(PENDING)
+  submissionMessage String?
+  changeRequest     String?
+  submittedAt       DateTime?
+  approvedAt        DateTime?
+  createdAt         DateTime        @default(now())
+  contractId        String
+  contract          Contract        @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+}
+
+model TimeEntry {
+  id         String          @id @default(cuid())
+  date       String
+  hours      Float
+  memo       String
+  status     TimeEntryStatus @default(LOGGED)
+  createdAt  DateTime        @default(now())
+  contractId String
+  contract   Contract        @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+}
+
+model ClientFeedback {
+  id           String   @id @default(cuid())
+  rating       Int
+  comment      String
+  createdAt    DateTime @default(now())
+  contractId   String   @unique
+  contract     Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  clientId     String
+  client       User     @relation("ClientFeedbackReceived", fields: [clientId], references: [id], onDelete: Cascade)
+  freelancerId String
+  freelancer   User     @relation("ClientFeedbackGiven", fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+}
+
+model WalletTransaction {
+  id         String       @id @default(cuid())
+  amount     Int
+  reason     WalletReason
+  contractId String?
+  createdAt  DateTime     @default(now())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model ConnectTransaction {
@@ -295,4 +388,34 @@ enum JobDuration {
   MORE_THAN_6_MONTHS
   THREE_TO_SIX_MONTHS
   ONE_TO_THREE_MONTHS
+}
+
+enum ContractStatus {
+  OFFERED
+  ACTIVE
+  DECLINED
+  WITHDRAWN
+  ENDED
+}
+
+enum MilestoneStatus {
+  PENDING
+  FUNDED
+  SUBMITTED
+  CHANGES_REQUESTED
+  APPROVED
+  CANCELLED
+}
+
+enum TimeEntryStatus {
+  LOGGED
+  PAID
+}
+
+enum WalletReason {
+  TOPUP
+  ESCROW_FUND
+  ESCROW_REFUND
+  MILESTONE_PAYOUT
+  HOURLY_PAYOUT
 }

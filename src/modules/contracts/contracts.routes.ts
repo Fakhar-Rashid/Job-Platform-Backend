@@ -1,0 +1,42 @@
+import { Router } from 'express';
+import * as controller from './contracts.controller.js';
+import {
+  hireSchema,
+  milestoneInputSchema,
+  submitWorkSchema,
+  requestChangesSchema,
+  logHoursSchema,
+  feedbackSchema,
+} from './contracts.schema.js';
+import { validate } from '../../middleware/validate.js';
+import { requireAuth } from '../../middleware/auth.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
+
+export const contractsRouter = Router();
+contractsRouter.use(requireAuth);
+
+contractsRouter.post('/', validate(hireSchema), asyncHandler(controller.hire));
+contractsRouter.get('/', asyncHandler(controller.listMine));
+contractsRouter.get('/:id', asyncHandler(controller.get));
+contractsRouter.post('/:id/accept', asyncHandler(controller.accept));
+contractsRouter.post('/:id/decline', asyncHandler(controller.decline));
+contractsRouter.post('/:id/withdraw', asyncHandler(controller.withdraw));
+contractsRouter.post('/:id/end', asyncHandler(controller.end));
+contractsRouter.post('/:id/milestones', validate(milestoneInputSchema), asyncHandler(controller.addMilestone));
+contractsRouter.post('/:id/hours', validate(logHoursSchema), asyncHandler(controller.logHours));
+contractsRouter.post('/:id/pay-hours', asyncHandler(controller.payHours));
+contractsRouter.post('/:id/feedback', validate(feedbackSchema), asyncHandler(controller.leaveFeedback));
+
+export const milestonesRouter = Router();
+milestonesRouter.use(requireAuth);
+
+milestonesRouter.patch('/:id', validate(milestoneInputSchema), asyncHandler(controller.updateMilestone));
+milestonesRouter.delete('/:id', asyncHandler(controller.deleteMilestone));
+milestonesRouter.post('/:id/fund', asyncHandler(controller.fundMilestone));
+milestonesRouter.post('/:id/submit', validate(submitWorkSchema), asyncHandler(controller.submitMilestone));
+milestonesRouter.post('/:id/request-changes', validate(requestChangesSchema), asyncHandler(controller.requestChanges));
+milestonesRouter.post('/:id/approve', asyncHandler(controller.approveMilestone));
+
+export const hoursRouter = Router();
+hoursRouter.use(requireAuth);
+hoursRouter.delete('/:id', asyncHandler(controller.removeEntry));

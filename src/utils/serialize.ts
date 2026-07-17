@@ -9,6 +9,7 @@ export function currentUser(user: User) {
   return {
     ...publicUser(user),
     connectBalance: user.connectBalance,
+    walletBalance: user.walletBalance,
     title: user.title,
     avatarUrl: user.avatarUrl,
     hourlyRate: user.hourlyRate,

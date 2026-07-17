@@ -1,183 +1,37 @@
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
+import { CLIENTS, FAKHAR, OPEN_JOBS, COMPLETED, PROFILE_CHILDREN } from './seed-data';
 
 const prisma = new PrismaClient();
+const SERVICE_FEE_RATE = 0.1;
 
-const CLIENTS = [
-  {
-    name: 'Alice',
-    email: 'alice@example.com',
-    paymentVerified: true,
-    rating: 5,
-    totalSpent: 1200,
-    country: 'United Kingdom',
-    activeRole: 'CLIENT' as const,
-  },
-  {
-    name: 'Bob',
-    email: 'bob@example.com',
-    paymentVerified: true,
-    rating: 4.8,
-    totalSpent: 340,
-    country: 'Germany',
-    activeRole: 'CLIENT' as const,
-  },
-];
-
-const FAKHAR = {
-  name: 'Muhammad Fakhar R.',
-  title: 'Mobile App Developer | Android | iOS | Flutter | React Native | AI apps',
-  overview:
-    'I love building software that ships. Whether you need a mobile app, an AI feature or a backend API, I can take your idea from concept to production. My focus is clean, maintainable code.',
-  hourlyRate: 15,
-  city: 'Lahore',
-  country: 'Pakistan',
-  connectBalance: 137,
-  responseTime: '0-4 hours',
-  hoursPerWeek: 'MORE_THAN_30' as const,
-  openToContractToHire: true,
-  idVerified: true,
-  phoneVerified: true,
-  boostProfile: true,
-  skills: [
-    'Flutter',
-    'Android',
-    'iOS',
-    'Smartphone',
-    'Mobile App Development',
-    'Firebase',
-    'Dart',
-    'React Native',
-    'API Integration',
-    'JavaScript',
-    'Node.js',
-    'UX & UI',
-  ],
-};
-
-const OPEN_JOBS = [
-  {
-    owner: 'alice@example.com',
-    title: 'Make an App for my website calculator',
-    description:
-      'Looking to turn my online glass calculator into a mobile application where customers can sign up and order their glass on the app.',
-    jobType: 'HOURLY' as const,
-    hourlyRateMin: 3,
-    hourlyRateMax: 5,
-    experienceLevel: 'ENTRY' as const,
-    category: 'Mobile App Development',
-    projectTerm: 'SHORT_TERM' as const,
-    scopeSize: 'MEDIUM' as const,
-    duration: 'ONE_TO_THREE_MONTHS' as const,
-    contractToHire: true,
-    connectsRequired: 10,
-    skills: ['AI Mobile App Development', 'Mobile App Development', 'Android', 'iPhone'],
-  },
-  {
-    owner: 'bob@example.com',
-    title: 'Basic Fuel Tracking App Development',
-    description:
-      'Need a simple cross-platform app to log fuel purchases, track mileage and show monthly spend charts.',
-    budget: 600,
-    jobType: 'FIXED' as const,
-    experienceLevel: 'INTERMEDIATE' as const,
-    category: 'Mobile App Development',
-    projectTerm: 'SHORT_TERM' as const,
-    scopeSize: 'MEDIUM' as const,
-    duration: 'ONE_TO_THREE_MONTHS' as const,
-    connectsRequired: 10,
-    skills: ['React Native', 'Mobile App Development', 'UI/UX Design'],
-  },
-];
-
-const COMPLETED = [
-  {
-    owner: 'alice@example.com',
-    title: 'Fix Bugs & Add Features to Existing Flutter App',
-    amount: 165,
-    rating: 5,
-    comment: 'Jumped into our Flutter codebase without hand-holding and fixed issues faster than expected.',
-    endorsements: [
-      'Reliable',
-      'Committed to Quality',
-      'Solution Oriented',
-      'Clear Communicator',
-      'Accountable for Outcomes',
-    ],
-  },
-  {
-    owner: 'bob@example.com',
-    title: 'Android & iOS App Development in Flutter',
-    amount: 35,
-    rating: 5,
-    comment: 'Great to work with, communicates clearly, and is very skilled.',
-    endorsements: ['Collaborative', 'Clear Communicator', 'Committed to Quality'],
-  },
-];
+function payoutAfterFee(amount: number): number {
+  return amount - Math.round(amount * SERVICE_FEE_RATE);
+}
 
 async function seedProfileChildren(userId: string): Promise<void> {
   await prisma.language.createMany({
-    data: [
-      { userId, name: 'English', proficiency: 'CONVERSATIONAL' },
-      { userId, name: 'Urdu', proficiency: 'NATIVE_OR_BILINGUAL' },
-      { userId, name: 'Punjabi', proficiency: 'CONVERSATIONAL' },
-      { userId, name: 'Hindi', proficiency: 'BASIC' },
-    ],
+    data: PROFILE_CHILDREN.languages.map((language) => ({ ...language, userId })),
   });
-  await prisma.education.create({
-    data: {
-      userId,
-      school: 'National University of Computer and Emerging Sciences',
-      degree: 'Bachelor of Computer Science (BCompSc)',
-      fieldOfStudy: 'Software Engineering',
-      startYear: 2022,
-      endYear: 2026,
-    },
-  });
-  await prisma.employment.create({
-    data: { userId, company: 'HappyChef', title: 'Software Engineer', startDate: '2025-06', current: true },
-  });
+  await prisma.education.create({ data: { ...PROFILE_CHILDREN.education, userId } });
+  await prisma.employment.create({ data: { ...PROFILE_CHILDREN.employment, userId } });
   await prisma.portfolioItem.createMany({
-    data: [
-      {
-        userId,
-        title: 'Void — Multi-Vendor eCommerce Mobile App',
-        category: 'Mobile App',
-        description: 'Firebase, Real-Time Chat',
-      },
-      {
-        userId,
-        title: 'SAAS | Client-Server Desktop App',
-        category: 'Desktop App',
-        description: 'Role-Based POS & Inventory',
-      },
-      { userId, title: 'Framer Website for Dentist', category: 'Website' },
-    ],
+    data: PROFILE_CHILDREN.portfolio.map((item) => ({ ...item, userId })),
   });
   await prisma.linkedAccount.createMany({
-    data: [
-      { userId, provider: 'GitHub', username: 'Fakhar Rashid', url: 'https://github.com/' },
-      { userId, provider: 'StackOverflow', username: 'Fakhar', url: 'https://stackoverflow.com/' },
-    ],
+    data: PROFILE_CHILDREN.linkedAccounts.map((account) => ({ ...account, userId })),
   });
-  await prisma.otherExperience.create({
-    data: {
-      userId,
-      subject: 'AI Image Generation for Marketing & Branding',
-      description:
-        'Created photorealistic marketing visuals using AI tools for clients across several industries.',
-    },
-  });
+  await prisma.otherExperience.create({ data: { ...PROFILE_CHILDREN.otherExperience, userId } });
 }
 
 async function seedCompletedJob(
-  fakharId: string,
-  ownerId: string,
+  freelancerId: string,
+  clientId: string,
   item: (typeof COMPLETED)[number],
 ): Promise<void> {
   const job = await prisma.job.create({
     data: {
-      ownerId,
+      ownerId: clientId,
       title: item.title,
       description: item.comment,
       budget: item.amount,
@@ -185,26 +39,70 @@ async function seedCompletedJob(
       jobType: 'FIXED',
     },
   });
-  await prisma.bid.create({
+  const bid = await prisma.bid.create({
     data: {
       jobId: job.id,
-      freelancerId: fakharId,
+      freelancerId,
       amount: item.amount,
       coverLetter: 'Happy to help on this project.',
       connectsSpent: 5,
       status: 'ACCEPTED',
     },
   });
+  const contract = await prisma.contract.create({
+    data: {
+      type: 'FIXED',
+      status: 'ENDED',
+      acceptedAt: new Date(),
+      endedAt: new Date(),
+      endedById: clientId,
+      jobId: job.id,
+      bidId: bid.id,
+      clientId,
+      freelancerId,
+      milestones: {
+        create: {
+          description: 'Project delivery',
+          amount: item.amount,
+          order: 0,
+          status: 'APPROVED',
+          submissionMessage: 'Delivered as discussed.',
+          submittedAt: new Date(),
+          approvedAt: new Date(),
+        },
+      },
+    },
+  });
+
+  const net = payoutAfterFee(item.amount);
+  await prisma.user.update({ where: { id: clientId }, data: { walletBalance: { decrement: item.amount } } });
+  await prisma.user.update({ where: { id: freelancerId }, data: { walletBalance: { increment: net } } });
+  await prisma.walletTransaction.createMany({
+    data: [
+      { userId: clientId, amount: -item.amount, reason: 'ESCROW_FUND', contractId: contract.id },
+      { userId: freelancerId, amount: net, reason: 'MILESTONE_PAYOUT', contractId: contract.id },
+    ],
+  });
+
   await prisma.review.create({
     data: {
       jobId: job.id,
-      authorId: ownerId,
-      freelancerId: fakharId,
+      authorId: clientId,
+      freelancerId,
       rating: item.rating,
       comment: item.comment,
       endorsements: item.endorsements,
       amount: item.amount,
       priceType: 'FIXED',
+    },
+  });
+  await prisma.clientFeedback.create({
+    data: {
+      contractId: contract.id,
+      clientId,
+      freelancerId,
+      rating: item.rating,
+      comment: item.clientComment,
     },
   });
 }

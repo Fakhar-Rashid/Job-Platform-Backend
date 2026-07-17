@@ -51,7 +51,15 @@ export async function listJobBids(jobId: string, ownerId: string) {
 
   return prisma.bid.findMany({
     where: { jobId },
-    include: { freelancer: freelancerSelect },
+    include: {
+      freelancer: freelancerSelect,
+      contracts: {
+        where: { status: { in: ['OFFERED', 'ACTIVE', 'ENDED'] } },
+        select: { id: true, status: true },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
+    },
     orderBy: [{ boostConnects: 'desc' }, { createdAt: 'asc' }],
   });
 }
@@ -71,28 +79,15 @@ export async function listJobBoosts(jobId: string) {
 export async function listMyBids(freelancerId: string) {
   return prisma.bid.findMany({
     where: { freelancerId },
-    include: { job: jobSelect },
+    include: {
+      job: jobSelect,
+      contracts: {
+        where: { status: { in: ['OFFERED', 'ACTIVE', 'ENDED'] } },
+        select: { id: true, status: true },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
+    },
     orderBy: { createdAt: 'desc' },
-  });
-}
-
-export async function acceptBid(bidId: string, ownerId: string) {
-  return prisma.$transaction(async (tx) => {
-    const bid = await tx.bid.findUnique({ where: { id: bidId }, include: { job: true } });
-    if (!bid) throw new HttpError(404, 'Bid not found');
-    if (bid.job.ownerId !== ownerId) throw new HttpError(403, 'Only the job owner can accept bids');
-    if (bid.job.status !== 'OPEN') throw new HttpError(409, 'This job is no longer open');
-
-    await tx.bid.updateMany({
-      where: { jobId: bid.jobId, id: { not: bidId } },
-      data: { status: 'REJECTED' },
-    });
-    await tx.job.update({ where: { id: bid.jobId }, data: { status: 'CLOSED' } });
-
-    return tx.bid.update({
-      where: { id: bidId },
-      data: { status: 'ACCEPTED' },
-      include: { freelancer: freelancerSelect },
-    });
   });
 }
